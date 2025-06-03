@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import retry from "async-retry";
 import { UserResponses } from "../types/conversation";
-import { parse, format } from "date-fns";
+import { parse } from "date-fns";
 
 interface CalendarDay {
   day: number;

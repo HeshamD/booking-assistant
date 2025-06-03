@@ -108,7 +108,7 @@ export const CONVERSATION_FLOW: ConversationStep[] = [
         input.toLowerCase().includes("yes") ||
         input.toLowerCase().includes("y");
       if (isYes) {
-        return `And lastly — how many guests will be joining (including yourself)?`;
+        return `And lastly — how many guests will be joining?`;
       } else {
         return "Okay — what would you like to note down instead?";
       }

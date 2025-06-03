@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Message, UserResponses } from "../types/conversation";
 import { CONVERSATION_FLOW } from "../config/conversationFlow";
+import { sendResponses } from "../lib/api";
 
 interface UseConversationReturn {
   messages: Message[];
@@ -26,6 +27,18 @@ export function useConversation(): UseConversationReturn {
   const [step, setStep] = useState<number>(0);
   const [pendingInput, setPendingInput] = useState<string>("");
 
+  // Console log responses whenever they change
+  useEffect(() => {
+    console.log("📋 Current responses:", responses);
+    console.log("📊 Response summary:", {
+      fieldsCompleted: Object.values(responses).filter(
+        (value) => value !== "" && value !== 0
+      ).length,
+      totalFields: Object.keys(responses).length,
+      currentStep: step,
+    });
+  }, [responses, step]);
+
   const addMessage = (message: Message): void => {
     setMessages((prev) => [...prev, message]);
   };
@@ -39,6 +52,8 @@ export function useConversation(): UseConversationReturn {
   const processUserInput = (input: string): void => {
     if (!input.trim()) return;
 
+    console.log("🔄 Processing user input:", input, "at step:", step);
+
     addMessage({ sender: "user", text: input });
 
     const currentFlow = CONVERSATION_FLOW[step];
@@ -49,7 +64,6 @@ export function useConversation(): UseConversationReturn {
       const isYes =
         input.toLowerCase().includes("yes") ||
         input.toLowerCase().includes("y");
-
       if (isYes) {
         // User confirmed, save the pending input
         if (pendingInput && step > 0) {
@@ -59,7 +73,21 @@ export function useConversation(): UseConversationReturn {
               ...responses,
               [previousStep.field]: pendingInput,
             };
+            console.log("✅ Confirmed and updating responses:", {
+              field: previousStep.field,
+              value: pendingInput,
+              updatedResponses,
+            });
             setResponses(updatedResponses);
+
+            // Check if this is the last step
+            if (step + 1 >= CONVERSATION_FLOW.length) {
+              console.log(
+                "🎉 All data confirmed — ready to send:",
+                updatedResponses
+              );
+              sendResponses(updatedResponses);
+            }
 
             // Generate next message with updated responses
             const nextMessage = currentFlow.nextMessage(
@@ -74,6 +102,7 @@ export function useConversation(): UseConversationReturn {
         }
       } else {
         // User said no, go back to previous step
+        console.log("❌ User declined, going back to previous step");
         const nextMessage = currentFlow.nextMessage(input, responses);
         addBotMessage(nextMessage);
         setStep(step - 1);
@@ -88,6 +117,7 @@ export function useConversation(): UseConversationReturn {
       if (currentFlow.validation) {
         const validation = currentFlow.validation(input);
         if (!validation.isValid) {
+          console.log("⚠️ Validation failed:", validation.errorMessage);
           addBotMessage(
             validation.errorMessage || "Invalid input. Please try again."
           );
@@ -96,8 +126,8 @@ export function useConversation(): UseConversationReturn {
       }
 
       // Store pending input for confirmation
+      console.log("⏳ Storing pending input for confirmation:", input);
       setPendingInput(input);
-
       // Generate confirmation message
       const nextMessage = currentFlow.nextMessage(input, responses);
       addBotMessage(nextMessage);

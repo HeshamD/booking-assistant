@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runBookingBot } from "../../../scrapper/playwrightBot";
+import { runBookingBot } from "../../../bots/booking-bot";
 
 export async function POST(request: NextRequest) {
   try {

@@ -4,9 +4,12 @@ export interface Message {
 }
 
 export interface UserResponses {
+  date: string;
+  time: string;
   name: string;
-  age: string;
   email: string;
+  comment: string;
+  guests: number;
 }
 
 export interface ConversationStep {

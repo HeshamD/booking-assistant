@@ -15,21 +15,24 @@ export function useConversation(): UseConversationReturn {
   const [messages, setMessages] = useState<Message[]>([
     { sender: "bot", text: CONVERSATION_FLOW[0].botMessage! },
   ]);
-  const [responses, setResponses] = useState<UserResponses>({ 
-    name: "", 
-    age: "", 
-    email: "" 
+  const [responses, setResponses] = useState<UserResponses>({
+    name: "",
+    date: "",
+    time: "",
+    email: "",
+    comment: "",
+    guests: 0,
   });
   const [step, setStep] = useState<number>(0);
   const [pendingInput, setPendingInput] = useState<string>("");
 
   const addMessage = (message: Message): void => {
-    setMessages(prev => [...prev, message]);
+    setMessages((prev) => [...prev, message]);
   };
 
   const addBotMessage = (text: string, delay: number = 500): void => {
     setTimeout(() => {
-      setMessages(prev => [...prev, { sender: "bot", text }]);
+      setMessages((prev) => [...prev, { sender: "bot", text }]);
     }, delay);
   };
 
@@ -43,8 +46,10 @@ export function useConversation(): UseConversationReturn {
 
     // Handle confirmation steps
     if (currentFlow.isConfirmation) {
-      const isYes = input.toLowerCase().includes('yes') || input.toLowerCase().includes('y');
-      
+      const isYes =
+        input.toLowerCase().includes("yes") ||
+        input.toLowerCase().includes("y");
+
       if (isYes) {
         // User confirmed, save the pending input
         if (pendingInput && step > 0) {
@@ -52,12 +57,15 @@ export function useConversation(): UseConversationReturn {
           if (previousStep.field) {
             const updatedResponses: UserResponses = {
               ...responses,
-              [previousStep.field]: pendingInput
+              [previousStep.field]: pendingInput,
             };
             setResponses(updatedResponses);
-            
+
             // Generate next message with updated responses
-            const nextMessage = currentFlow.nextMessage(input, updatedResponses);
+            const nextMessage = currentFlow.nextMessage(
+              input,
+              updatedResponses
+            );
             addBotMessage(nextMessage);
             setStep(step + 1);
             setPendingInput("");
@@ -80,14 +88,16 @@ export function useConversation(): UseConversationReturn {
       if (currentFlow.validation) {
         const validation = currentFlow.validation(input);
         if (!validation.isValid) {
-          addBotMessage(validation.errorMessage || "Invalid input. Please try again.");
+          addBotMessage(
+            validation.errorMessage || "Invalid input. Please try again."
+          );
           return;
         }
       }
 
       // Store pending input for confirmation
       setPendingInput(input);
-      
+
       // Generate confirmation message
       const nextMessage = currentFlow.nextMessage(input, responses);
       addBotMessage(nextMessage);
@@ -106,6 +116,6 @@ export function useConversation(): UseConversationReturn {
     responses,
     step,
     processUserInput,
-    isComplete: step >= CONVERSATION_FLOW.length
+    isComplete: step >= CONVERSATION_FLOW.length,
   };
 }

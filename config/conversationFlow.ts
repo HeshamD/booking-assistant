@@ -1,36 +1,14 @@
+import { validateDate, validateTime } from "../lib/helperfunctions";
 import { ConversationStep } from "../types/conversation";
-
-const validateEmail = (email: string) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return {
-    isValid: emailRegex.test(email),
-    errorMessage: "Please enter a valid email address (e.g., user@example.com)",
-  };
-};
-
-const validateAge = (age: string) => {
-  const ageNum = parseInt(age);
-  return {
-    isValid: !isNaN(ageNum) && ageNum > 0 && ageNum < 120,
-    errorMessage: "Please enter a valid age (1-100)",
-  };
-};
-
-const validateName = (name: string) => {
-  return {
-    isValid: name.trim().length >= 2,
-    errorMessage: "Please enter a name with at least 2 characters",
-  };
-};
 
 export const CONVERSATION_FLOW: ConversationStep[] = [
   {
     id: "name-input",
-    botMessage: "Hi! What's your name?",
+    botMessage:
+      "Hi there! I'm Mia, your booking assistant. May I know your name?",
     nextMessage: (input: string) =>
-      `You entered "${input}". Is this correct? (yes/no)`,
+      `Got it — you entered "${input}". Is that right? (yes/no)`,
     field: "name",
-    validation: validateName,
   },
   {
     id: "name-confirm",
@@ -40,32 +18,55 @@ export const CONVERSATION_FLOW: ConversationStep[] = [
         input.toLowerCase().includes("yes") ||
         input.toLowerCase().includes("y");
       if (isYes) {
-        return `Nice to meet you, ${responses?.name}! How old are you?`;
+        return `Lovely to meet you, ${responses?.name}! What date would you like to book? (MM/DD/YYYY)`;
       } else {
-        return "No problem! What's your name?";
+        return "No problem — what's your name?";
       }
     },
     isConfirmation: true,
   },
   {
-    id: "age-input",
+    id: "date-input",
     botMessage: null,
     nextMessage: (input: string) =>
-      `You entered "${input}". Is this correct? (yes/no)`,
-    field: "age",
-    validation: validateAge,
+      `You'd like "${input}". Is that correct? (yes/no)`,
+    field: "date",
+    validation: validateDate,
   },
   {
-    id: "age-confirm",
+    id: "date-confirm",
     botMessage: null,
     nextMessage: (input: string, responses) => {
       const isYes =
         input.toLowerCase().includes("yes") ||
         input.toLowerCase().includes("y");
       if (isYes) {
-        return `Great! What's your email address?`;
+        return `Perfect — what time works for you on ${responses?.date}? (please type in this format 00:00 PM or 00:00 AM)`;
       } else {
-        return "No problem! How old are you?";
+        return "No problem — what date would you like to book? (MM/DD/YYYY)";
+      }
+    },
+    isConfirmation: true,
+  },
+  {
+    id: "time-input",
+    botMessage: null,
+    nextMessage: (input: string) =>
+      `You'd like "${input}". Is that correct? (yes/no)`,
+    field: "time",
+    validation: validateTime,
+  },
+  {
+    id: "time-confirm",
+    botMessage: null,
+    nextMessage: (input: string, responses) => {
+      const isYes =
+        input.toLowerCase().includes("yes") ||
+        input.toLowerCase().includes("y");
+      if (isYes) {
+        return `Awesome! Can I grab your email address?`;
+      } else {
+        return `Okay, what time would you prefer on ${responses?.date}? (please type in this format 00:00 PM or 00:00 AM)`;
       }
     },
     isConfirmation: true,
@@ -74,9 +75,8 @@ export const CONVERSATION_FLOW: ConversationStep[] = [
     id: "email-input",
     botMessage: null,
     nextMessage: (input: string) =>
-      `You entered "${input}". Is this correct? (yes/no)`,
+      `Got it — "${input}". Is that your correct email? (yes/no)`,
     field: "email",
-    validation: validateEmail,
   },
   {
     id: "email-confirm",
@@ -86,11 +86,68 @@ export const CONVERSATION_FLOW: ConversationStep[] = [
         input.toLowerCase().includes("yes") ||
         input.toLowerCase().includes("y");
       if (isYes) {
-        return `Awesome, ${responses?.name}! Here's what I got: Name: ${responses?.name}, Age: ${responses?.age}, Email: ${responses?.email}. Thanks! 🎉`;
+        return `Thank you! Any comments or special notes you'd like us to know? (leave blank if none)`;
       } else {
-        return "No problem! What's your email address?";
+        return "Okay — could you share your email address again?";
+      }
+    },
+    isConfirmation: true,
+  },
+  {
+    id: "comment-input",
+    botMessage: null,
+    nextMessage: (input: string) =>
+      `Noted — "${input}". Is that correct? (yes/no)`,
+    field: "comment",
+  },
+  {
+    id: "comment-confirm",
+    botMessage: null,
+    nextMessage: (input: string, responses) => {
+      const isYes =
+        input.toLowerCase().includes("yes") ||
+        input.toLowerCase().includes("y");
+      if (isYes) {
+        return `And lastly — how many guests will be joining (including yourself)?`;
+      } else {
+        return "Okay — what would you like to note down instead?";
+      }
+    },
+    isConfirmation: true,
+  },
+  {
+    id: "guests-input",
+    botMessage: null,
+    nextMessage: (input: string) =>
+      `You mentioned "${input}" guests. Is that right? (yes/no)`,
+    field: "guests",
+  },
+  {
+    id: "guests-confirm",
+    botMessage: null,
+    nextMessage: (input: string, responses) => {
+      const isYes =
+        input.toLowerCase().includes("yes") ||
+        input.toLowerCase().includes("y");
+      if (isYes) {
+        return `Amazing, ${
+          responses?.name
+        }! Here's a quick summary of your booking:
+
+- 📅 Date: ${responses?.date}
+- 🕑 Time: ${responses?.time}
+- 👤 Name: ${responses?.name}
+- 📧 Email: ${responses?.email}
+- 📝 Comment: ${responses?.comment || "None"}
+- 👥 Guests: ${responses?.guests}
+
+Thanks for booking — we're excited to have you! 🎉`;
+      } else {
+        return "Okay — how many guests will you be bringing?";
       }
     },
     isConfirmation: true,
   },
 ];
+
+

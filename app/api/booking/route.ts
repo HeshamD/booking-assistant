@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     console.log("📥 Booking data received:", data);
 
     // Trigger the playwright bot
-    await runBookingBot();
+    await runBookingBot(data);
 
     return NextResponse.json(
       { message: "✅ Booking bot triggered successfully." },
